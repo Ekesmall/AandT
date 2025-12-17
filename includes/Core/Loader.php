@@ -40,31 +40,61 @@ class Loader {
      */
     public static function load_admin_assets( $hook ) {
 
-    if ( $hook !== 'toplevel_page_ameliatutor-settings' ) {
-        return;
+        // Only load on our settings page
+        if ( $hook !== 'toplevel_page_ameliatutor-settings' ) {
+            return;
+        }
+
+        // Enqueue admin CSS
+        wp_enqueue_style(
+            'ameliatutor-admin',
+            AMELIATUTOR_URL . 'assets/admin.css',
+            [],
+            AMELIATUTOR_VERSION
+        );
+
+        // Enqueue admin JS
+        wp_enqueue_script(
+            'ameliatutor-admin',
+            AMELIATUTOR_URL . 'assets/admin.js',
+            [ 'jquery' ],
+            AMELIATUTOR_VERSION,
+            true
+        );
+
+        // Pass data to JavaScript
+        wp_localize_script(
+            'ameliatutor-admin',
+            'AmeliaTutor',
+            [
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( 'ameliatutor_admin_nonce' ),
+                'strings' => [
+                    'confirmDelete' => __( 'Are you sure you want to remove this mapping?', 'amelia-tutor-integration' ),
+                    'savingText'    => __( 'Saving...', 'amelia-tutor-integration' ),
+                    'savedText'     => __( '✓ Saved!', 'amelia-tutor-integration' ),
+                    'errorText'     => __( 'Error saving mappings', 'amelia-tutor-integration' ),
+                    'loadingText'   => __( 'Loading...', 'amelia-tutor-integration' ),
+                ],
+            ]
+        );
     }
 
-    wp_enqueue_style(
-        'ameliatutor-admin',
-        AMELIATUTOR_URL . 'assets/admin.css',
-        [],
-        AMELIATUTOR_VERSION
-    );
+    /**
+     * Frontend CSS & JS
+     */
+    public static function load_frontend_assets() {
 
-    wp_enqueue_script(
-        'ameliatutor-admin',
-        AMELIATUTOR_URL . 'assets/admin.js',
-        [ 'jquery' ],
-        AMELIATUTOR_VERSION,
-        true
-    );
+        // Check if we're on a TutorLMS page
+        if ( ! function_exists( 'tutor' ) ) {
+            return;
+        }
 
-    wp_localize_script(
-        'ameliatutor-admin',
-        'AmeliaTutor',
-        [
-            'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-            'nonce'   => wp_create_nonce( 'ameliatutor_nonce' ),
-        ]
-    );
+        wp_enqueue_style(
+            'ameliatutor-frontend',
+            AMELIATUTOR_URL . 'assets/frontend.css',
+            [],
+            AMELIATUTOR_VERSION
+        );
+    }
 }

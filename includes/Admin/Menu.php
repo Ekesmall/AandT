@@ -13,31 +13,33 @@ class Menu {
     }
 
     public static function register_menu() {
-
+        
         add_menu_page(
             __( 'Amelia Tutor Integration', 'amelia-tutor-integration' ),
             __( 'Amelia Tutor', 'amelia-tutor-integration' ),
             'manage_options',
             'ameliatutor-settings',
             [ __CLASS__, 'render' ],
-            'dashicons-welcome-learn-more',
-            56
+            'dashicons-admin-generic',
+            55
         );
     }
 
     public static function render() {
 
         if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die( __( 'Sorry, you are not allowed to access this page.' ) );
+            wp_die( __( 'Access denied', 'amelia-tutor-integration' ) );
         }
 
-        ?>
-        <div class="wrap">
-            <h1>Amelia – TutorLMS Integration</h1>
-            <p>The admin page is now working correctly ✅</p>
-
-            <?php do_action( 'ameliatutor_settings_page' ); ?>
-        </div>
-        <?php
+        echo '<div class="wrap">';
+        echo '<h1>' . esc_html__( 'Amelia – TutorLMS Integration', 'amelia-tutor-integration' ) . '</h1>';
+        
+        /**
+         * Settings page content hook
+         * Other classes can hook into this to render their content
+         */
+        do_action( 'ameliatutor_settings_page' );
+        
+        echo '</div>';
     }
 }

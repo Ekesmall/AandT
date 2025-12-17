@@ -13,6 +13,11 @@ class LessonCompletion {
      */
     public static function maybe_complete( array $booking ) {
 
+        // Check if auto-completion is enabled
+        if ( get_option( 'ameliatutor_auto_complete_lesson', 'yes' ) !== 'yes' ) {
+            return;
+        }
+
         if ( empty( $booking['lesson_id'] ) || empty( $booking['user_id'] ) ) {
             return;
         }
@@ -25,13 +30,25 @@ class LessonCompletion {
         // Handle recurring sessions
         if ( intval( $booking['is_recurring'] ) === 1 ) {
 
-            $completed = self::count_completed_sessions( $booking['appointment_id'] );
+            // Check if we should complete all recurring sessions first
+            $complete_all = get_option( 'ameliatutor_recurring_complete_all', 'no' ) === 'yes';
 
-            if ( $completed < intval( $booking['recurring_count'] ) ) {
-                return;
+            if ( $complete_all ) {
+                $completed = self::count_completed_sessions( $booking['appointment_id'] );
+
+                // Only mark complete when all sessions are done
+                if ( $completed < intval( $booking['recurring_count'] ) ) {
+                    return;
+                }
             }
         }
 
+        // Check if already completed to avoid duplicate completions
+        if ( tutor_utils()->is_completed_lesson( intval( $booking['lesson_id'] ), intval( $booking['user_id'] ) ) ) {
+            return;
+        }
+
+        // Mark lesson as complete
         tutor_utils()->mark_lesson_complete(
             intval( $booking['lesson_id'] ),
             intval( $booking['user_id'] )

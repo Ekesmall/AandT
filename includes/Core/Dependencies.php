@@ -16,11 +16,13 @@ class Dependencies {
 
         $missing = [];
 
-        if ( ! defined( 'TUTOR_VERSION' ) ) {
+        // Check for TutorLMS
+        if ( ! defined( 'TUTOR_VERSION' ) && ! class_exists( 'Tutor' ) ) {
             $missing[] = 'TutorLMS';
         }
 
-        if ( ! class_exists( 'Amelia\\Plugin' ) ) {
+        // Check for Amelia
+        if ( ! defined( 'AMELIA_VERSION' ) && ! class_exists( 'AmeliaBooking\Plugin' ) ) {
             $missing[] = 'Amelia Booking';
         }
 
@@ -29,12 +31,16 @@ class Dependencies {
                 ?>
                 <div class="notice notice-error">
                     <p>
-                        <strong>Amelia–TutorLMS Integration</strong> requires:
+                        <strong><?php esc_html_e( 'Amelia–TutorLMS Integration', 'amelia-tutor-integration' ); ?></strong>
+                        <?php esc_html_e( ' requires the following plugins to be installed and activated:', 'amelia-tutor-integration' ); ?>
                         <strong><?php echo esc_html( implode( ' and ', $missing ) ); ?></strong>
                     </p>
                 </div>
                 <?php
             } );
+
+            // Deactivate this plugin if dependencies are missing
+            deactivate_plugins( plugin_basename( __FILE__ ) );
         }
     }
 }
