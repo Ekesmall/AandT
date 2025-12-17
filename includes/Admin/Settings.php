@@ -170,13 +170,6 @@ class Settings {
             </div>
 
         </div>
-
-        <script type="text/javascript">
-            var AmeliaTutor = AmeliaTutor || {};
-            AmeliaTutor.services = <?php echo wp_json_encode( $services ); ?>;
-            AmeliaTutor.courses = <?php echo wp_json_encode( $courses ); ?>;
-            AmeliaTutor.existing_mappings = <?php echo wp_json_encode( $mappings ); ?>;
-        </script>
         <?php
     }
 
