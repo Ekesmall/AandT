@@ -74,6 +74,14 @@
     box-shadow: 0 2px 4px rgba(0,0,0,.05);
 }
 
+/* Simplified Mapping Row (Service → Course only) */
+.ameliatutor-mapping-row-simple {
+    display: grid;
+    grid-template-columns: 1fr 40px 1fr 50px;
+    gap: 15px;
+    align-items: start;
+}
+
 /* Mapping Fields */
 .ameliatutor-mapping-field {
     flex: 1;
@@ -109,6 +117,46 @@
     background: #f0f0f1;
     color: #646970;
     cursor: not-allowed;
+}
+
+/* Lesson Count Display */
+.ameliatutor-lesson-count-display {
+    margin-top: 8px;
+}
+
+.ameliatutor-lesson-info {
+    background: #d5e9f6;
+    border-left-color: #0073aa;
+}
+
+.ameliatutor-lesson-info strong {
+    font-weight: 700;
+}
+
+/* Mapping Note */
+.ameliatutor-mapping-note {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 8px 0 0 0;
+    padding: 8px 10px;
+    background: #e7f3ff;
+    border-left: 3px solid #2271b1;
+    border-radius: 3px;
+    font-size: 12px;
+    color: #1d2327;
+}
+
+.ameliatutor-mapping-note .dashicons {
+    width: 16px;
+    height: 16px;
+    font-size: 16px;
+    color: #2271b1;
+    flex-shrink: 0;
+}
+
+.ameliatutor-mapping-note span:last-child {
+    line-height: 1.4;
 }
 
 /* Mapping Arrow */
@@ -179,17 +227,17 @@
 
 /* Responsive Design */
 @media screen and (max-width: 1200px) {
-    .ameliatutor-mapping-row {
-        flex-wrap: wrap;
-    }
-    
-    .ameliatutor-mapping-field {
-        flex: 1 1 calc(50% - 30px);
-        min-width: 200px;
+    .ameliatutor-mapping-row-simple {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
     
     .ameliatutor-mapping-arrow {
         display: none;
+    }
+    
+    .ameliatutor-mapping-actions {
+        margin-top: 0;
     }
 }
 
@@ -278,4 +326,8 @@
 .ameliatutor-info-box li {
     margin-bottom: 5px;
     color: #50575e;
+}
+
+.ameliatutor-info-box li strong {
+    color: #1d2327;
 }

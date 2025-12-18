@@ -62,26 +62,59 @@ class BookingTracker {
 
         $zoom = ZoomExtractor::from_appointment( $appointment );
 
-        $is_recurring     = ! empty( $appointment['recurring'] );
-        $recurring_count  = $is_recurring ? count( $appointment['recurring'] ) : 1;
+        $is_recurring    = ! empty( $appointment['recurring'] );
+        $recurring_count = $is_recurring ? count( $appointment['recurring'] ) : 1;
 
-        $wpdb->insert(
-            $wpdb->prefix . 'ameliatutor_bookings',
-            [
-                'appointment_id' => $appointment['id'],
-                'booking_id'     => $appointment['bookings'][0]['id'],
-                'customer_id'    => $customer_id,
-                'user_id'        => $user_id,
-                'course_id'      => $course_id,
-                'lesson_id'      => $lesson_id,
-                'service_id'     => $service_id,
-                'zoom_join_url'  => $zoom['join'],
-                'zoom_host_url'  => $zoom['host'],
-                'booking_status' => $appointment['status'],
-                'is_recurring'   => $is_recurring ? 1 : 0,
-                'recurring_count'=> $recurring_count,
-            ]
-        );
+        // If recurring, store each session separately
+        if ( $is_recurring && ! empty( $appointment['recurring'] ) ) {
+            
+            $session_number = 1;
+            
+            foreach ( $appointment['recurring'] as $recurring_appointment ) {
+                
+                $wpdb->insert(
+                    $wpdb->prefix . 'ameliatutor_bookings',
+                    [
+                        'appointment_id'  => intval( $recurring_appointment['id'] ),
+                        'booking_id'      => $appointment['bookings'][0]['id'],
+                        'customer_id'     => $customer_id,
+                        'user_id'         => $user_id,
+                        'course_id'       => $course_id,
+                        'lesson_id'       => 0, // Will be set dynamically based on session number
+                        'service_id'      => $service_id,
+                        'zoom_join_url'   => $zoom['join'],
+                        'zoom_host_url'   => $zoom['host'],
+                        'booking_status'  => $recurring_appointment['status'] ?? 'pending',
+                        'is_recurring'    => 1,
+                        'recurring_count' => $recurring_count,
+                        'session_number'  => $session_number,
+                    ]
+                );
+                
+                $session_number++;
+            }
+            
+        } else {
+            // Single appointment
+            $wpdb->insert(
+                $wpdb->prefix . 'ameliatutor_bookings',
+                [
+                    'appointment_id'  => $appointment['id'],
+                    'booking_id'      => $appointment['bookings'][0]['id'],
+                    'customer_id'     => $customer_id,
+                    'user_id'         => $user_id,
+                    'course_id'       => $course_id,
+                    'lesson_id'       => $lesson_id,
+                    'service_id'      => $service_id,
+                    'zoom_join_url'   => $zoom['join'],
+                    'zoom_host_url'   => $zoom['host'],
+                    'booking_status'  => $appointment['status'],
+                    'is_recurring'    => 0,
+                    'recurring_count' => 1,
+                    'session_number'  => 1,
+                ]
+            );
+        }
     }
 
     /**
@@ -113,6 +146,9 @@ class BookingTracker {
             [ 'booking_status' => $new_status ],
             [ 'appointment_id' => $appointment_id ]
         );
+
+        // Update the booking array with current status before passing to completion
+        $booking['booking_status'] = $new_status;
 
         LessonCompletion::maybe_complete( $booking );
     }

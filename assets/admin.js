@@ -15,8 +15,8 @@
             // Remove mapping row
             $(document).on('click', '.ameliatutor-remove-mapping', this.removeMappingRow.bind(this));
             
-            // Course selection change - load lessons
-            $(document).on('change', '.ameliatutor-course-select', this.loadLessons.bind(this));
+            // Course selection change - show lesson count
+            $(document).on('change', '.ameliatutor-course-select', this.showLessonCount.bind(this));
             
             // Save mappings
             $(document).on('click', '#ameliatutor-save-mappings', this.saveMappings.bind(this));
@@ -38,8 +38,7 @@
             $.each(existingMappings, function(serviceId, mapping) {
                 AmeliaTutorMapping.addMappingRow(null, {
                     serviceId: serviceId,
-                    courseId: mapping.course_id,
-                    lessonId: mapping.lesson_id
+                    courseId: mapping.course_id
                 });
             });
         },
@@ -56,7 +55,7 @@
             const courses = AmeliaTutor.courses || [];
 
             const rowHtml = `
-                <div class="ameliatutor-mapping-row">
+                <div class="ameliatutor-mapping-row ameliatutor-mapping-row-simple">
                     <div class="ameliatutor-mapping-field">
                         <label>Amelia Service</label>
                         <select class="ameliatutor-service-select" name="mapping_service[]" required>
@@ -81,15 +80,16 @@
                                 </option>
                             `).join('')}
                         </select>
-                    </div>
-
-                    <div class="ameliatutor-mapping-arrow">→</div>
-
-                    <div class="ameliatutor-mapping-field">
-                        <label>TutorLMS Lesson</label>
-                        <select class="ameliatutor-lesson-select" name="mapping_lesson[]">
-                            <option value="">Select Lesson...</option>
-                        </select>
+                        <div class="ameliatutor-lesson-count-display" style="display: none;">
+                            <p class="ameliatutor-mapping-note ameliatutor-lesson-info">
+                                <span class="dashicons dashicons-welcome-learn-more"></span>
+                                <span class="lesson-count-text">Loading lesson count...</span>
+                            </p>
+                        </div>
+                        <p class="ameliatutor-mapping-note">
+                            <span class="dashicons dashicons-info"></span>
+                            <span>Recurring sessions auto-complete lessons sequentially</span>
+                        </p>
                     </div>
 
                     <div class="ameliatutor-mapping-actions">
@@ -102,10 +102,10 @@
 
             container.append(rowHtml);
 
-            // If existing data, load lessons for the selected course
+            // If existing data, show lesson count
             if (existingData && existingData.courseId) {
                 const newRow = container.find('.ameliatutor-mapping-row:last');
-                this.loadLessonsForRow(newRow, existingData.courseId, existingData.lessonId);
+                this.loadLessonCount(newRow, existingData.courseId);
             }
         },
 
@@ -128,48 +128,49 @@
             }
         },
 
-        loadLessons: function(e) {
+        showLessonCount: function(e) {
             const $select = $(e.currentTarget);
             const courseId = $select.val();
             const row = $select.closest('.ameliatutor-mapping-row');
             
-            this.loadLessonsForRow(row, courseId);
+            if (courseId) {
+                this.loadLessonCount(row, courseId);
+            } else {
+                row.find('.ameliatutor-lesson-count-display').hide();
+            }
         },
 
-        loadLessonsForRow: function(row, courseId, selectedLessonId = null) {
-            if (!courseId) {
-                row.find('.ameliatutor-lesson-select').html('<option value="">Select Course First...</option>');
-                return;
-            }
-
-            const lessonSelect = row.find('.ameliatutor-lesson-select');
-            lessonSelect.html('<option value="">Loading lessons...</option>').prop('disabled', true);
+        loadLessonCount: function(row, courseId) {
+            const countDisplay = row.find('.ameliatutor-lesson-count-display');
+            const countText = row.find('.lesson-count-text');
+            
+            countDisplay.show();
+            countText.text('Loading lesson count...');
 
             $.ajax({
                 url: AmeliaTutor.ajaxUrl,
                 type: 'POST',
                 data: {
-                    action: 'ameliatutor_get_lessons',
+                    action: 'ameliatutor_get_lesson_count',
                     nonce: AmeliaTutor.nonce,
                     course_id: courseId
                 },
                 success: function(response) {
-                    if (response.success && response.data) {
-                        let options = '<option value="">None (Complete course only)</option>';
+                    if (response.success) {
+                        const count = response.data.count;
+                        const plural = count === 1 ? 'lesson' : 'lessons';
                         
-                        response.data.forEach(function(lesson) {
-                            const selected = selectedLessonId && selectedLessonId == lesson.id ? 'selected' : '';
-                            options += `<option value="${lesson.id}" ${selected}>${lesson.title}</option>`;
-                        });
-                        
-                        lessonSelect.html(options).prop('disabled', false);
+                        if (count === 0) {
+                            countText.html('<strong style="color: #d63638;">⚠️ This course has NO lessons!</strong> Add lessons before mapping.');
+                        } else {
+                            countText.html(`This course has <strong style="color: #2271b1;">${count} ${plural}</strong>. Students must book exactly <strong>${count} sessions</strong>.`);
+                        }
                     } else {
-                        lessonSelect.html('<option value="">No lessons found</option>').prop('disabled', false);
+                        countText.text('Could not load lesson count.');
                     }
                 },
                 error: function() {
-                    lessonSelect.html('<option value="">Error loading lessons</option>').prop('disabled', false);
-                    alert('Failed to load lessons. Please try again.');
+                    countText.text('Error loading lesson count.');
                 }
             });
         },
@@ -187,7 +188,6 @@
             $('#ameliatutor-mappings-container .ameliatutor-mapping-row').each(function() {
                 const serviceId = $(this).find('.ameliatutor-service-select').val();
                 const courseId = $(this).find('.ameliatutor-course-select').val();
-                const lessonId = $(this).find('.ameliatutor-lesson-select').val();
 
                 if (!serviceId || !courseId) {
                     isValid = false;
@@ -196,7 +196,7 @@
 
                 mappings[serviceId] = {
                     course_id: courseId,
-                    lesson_id: lessonId || ''
+                    lesson_id: 0 // Not used - sequential mapping is automatic
                 };
             });
 

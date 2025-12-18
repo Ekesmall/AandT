@@ -32,6 +32,7 @@ class Activator {
             booking_status VARCHAR(50) DEFAULT 'pending',
             is_recurring TINYINT(1) DEFAULT 0,
             recurring_count INT DEFAULT 1,
+            session_number INT DEFAULT 1,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             PRIMARY KEY (id),
             KEY user_id (user_id),
