@@ -133,22 +133,27 @@ class Settings {
                 <h2><?php esc_html_e( 'Service → Course Mapping', 'amelia-tutor-integration' ); ?></h2>
                 
                 <div class="ameliatutor-info-box">
-                    <p><strong><?php esc_html_e( 'How it works:', 'amelia-tutor-integration' ); ?></strong></p>
-                    <ul>
-                        <li><?php esc_html_e( 'Connect each Amelia service to a TutorLMS course', 'amelia-tutor-integration' ); ?></li>
-                        <li><?php esc_html_e( 'Students must enroll in the course before booking (if enabled above)', 'amelia-tutor-integration' ); ?></li>
-                        <li><strong><?php esc_html_e( 'Recurring Sessions → Sequential Lessons (Automatic!)', 'amelia-tutor-integration' ); ?></strong><br>
-                            <span style="color: #2271b1; font-size: 13px;">
-                                <?php esc_html_e( 'Session 1 completes Lesson 1, Session 2 completes Lesson 2, Session 3 completes Lesson 3, etc.', 'amelia-tutor-integration' ); ?>
-                            </span>
-                        </li>
-                        <li><strong><?php esc_html_e( 'Session Count Enforcement:', 'amelia-tutor-integration' ); ?></strong><br>
-                            <span style="color: #d63638; font-size: 13px;">
-                                <?php esc_html_e( 'If course has 4 lessons, students MUST book exactly 4 sessions (if enforcement enabled above).', 'amelia-tutor-integration' ); ?>
-                            </span>
-                        </li>
-                    </ul>
-                </div>
+    <p><strong><?php esc_html_e( 'How it works:', 'amelia-tutor-integration' ); ?></strong></p>
+    <ul>
+        <li><?php esc_html_e( 'Connect each Amelia service to a TutorLMS course', 'amelia-tutor-integration' ); ?></li>
+        <li><?php esc_html_e( 'Students must enroll in the course before booking (if enabled above)', 'amelia-tutor-integration' ); ?></li>
+        <li><strong><?php esc_html_e( 'Recurring Sessions → Sequential Lessons (Automatic!)', 'amelia-tutor-integration' ); ?></strong><br>
+            <span style="color: #2271b1; font-size: 13px;">
+                <?php esc_html_e( 'Session 1 completes Lesson 1, Session 2 completes Lesson 2, Session 3 completes Lesson 3, etc.', 'amelia-tutor-integration' ); ?>
+            </span>
+        </li>
+        <li><strong><?php esc_html_e( 'Session Count Enforcement:', 'amelia-tutor-integration' ); ?></strong><br>
+            <span style="color: #d63638; font-size: 13px;">
+                <?php esc_html_e( 'If course has 4 lessons, students MUST book exactly 4 sessions (if enforcement enabled above).', 'amelia-tutor-integration' ); ?>
+            </span>
+        </li>
+        <li><strong><?php esc_html_e( 'Embed Booking Forms:', 'amelia-tutor-integration' ); ?></strong><br>
+            <span style="color: #00a32a; font-size: 13px;">
+                <?php esc_html_e( 'Add [ameliatutor_booking service=X] to any course description to embed booking forms with automatic enrollment verification.', 'amelia-tutor-integration' ); ?>
+            </span>
+        </li>
+    </ul>
+</div>
 
                 <div class="ameliatutor-info-box" style="background: #fff4e5; border-left-color: #f0b849;">
                     <p><strong>💡 <?php esc_html_e( 'Pro Tip: Perfect Alignment', 'amelia-tutor-integration' ); ?></strong></p>

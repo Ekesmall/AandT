@@ -14,26 +14,29 @@ class Loader {
 
     public static function init() {
 
-        // Admin
-        if ( is_admin() ) {
-            Admin\Menu::init();
-            Admin\Settings::init();
-            Admin\Ajax::init();
+    // Admin
+    if ( is_admin() ) {
+        Admin\Menu::init();
+        Admin\Settings::init();
+        Admin\Ajax::init();
 
-            add_action( 'admin_enqueue_scripts', [ __CLASS__, 'load_admin_assets' ] );
-        }
-
-        // Amelia
-        Amelia\EnrollmentGuard::init();
-        Amelia\BookingTracker::init();
-
-        // Tutor
-        Tutor\DashboardStudent::init();
-        Tutor\DashboardInstructor::init();
-
-        // Frontend assets
-        add_action( 'wp_enqueue_scripts', [ __CLASS__, 'load_frontend_assets' ] );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'load_admin_assets' ] );
     }
+
+    // Amelia
+    Amelia\EnrollmentGuard::init();
+    Amelia\BookingTracker::init();
+
+    // Tutor
+    Tutor\DashboardStudent::init();
+    Tutor\DashboardInstructor::init();
+
+    // Shortcodes
+    \AmeliaTutor\Shortcodes\BookingShortcode::init();
+
+    // Frontend assets
+    add_action( 'wp_enqueue_scripts', [ __CLASS__, 'load_frontend_assets' ] );
+}
 
     /**
      * Admin CSS & JS

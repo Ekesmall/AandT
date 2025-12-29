@@ -3,7 +3,7 @@
  * Plugin Name: Amelia-TutorLMS Complete Integration
  * Plugin URI: https://ekesmall.com
  * Description: Complete integration between Amelia and TutorLMS - enrollment verification, lesson completion, dashboard widgets
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Ekemode Quazim (Ekesmall)
  * Author URI: https://ekesmall.com
  * Requires at least: 5.8
@@ -90,10 +90,11 @@ add_action( 'plugins_loaded', function () {
         return;
     }
 
-    // Initialize the plugin
-    if ( class_exists( 'AmeliaTutor\\Core\\Loader' ) ) {
-        AmeliaTutor\Core\Loader::init();
-    }
+// Initialize the plugin
+if ( class_exists( 'AmeliaTutor\\Core\\Loader' ) ) {
+    AmeliaTutor\Core\Loader::init();
+}
+
 
 }, 20 ); // Priority 20 to ensure Tutor and Amelia are loaded first
 
@@ -108,4 +109,44 @@ add_filter( 'plugin_action_links_' . AMELIATUTOR_BASENAME, function( $links ) {
     );
     array_unshift( $links, $settings_link );
     return $links;
+});
+
+/**
+ * Frontend redirect after TutorLMS Vue dashboard login
+ */
+add_action( 'wp_enqueue_scripts', function () {
+
+    // Only on dashboard page and if redirect_to is present
+    if ( ! is_page( 'dashboard' ) || empty( $_GET['redirect_to'] ) ) {
+        return;
+    }
+
+    wp_add_inline_script(
+        'jquery',
+        "
+        (function () {
+            const params = new URLSearchParams(window.location.search);
+            const redirectTo = params.get('redirect_to');
+
+            if (!redirectTo) return;
+
+            const targetUrl = decodeURIComponent(redirectTo);
+
+            if (!targetUrl.startsWith(window.location.origin)) return;
+
+            // Observe DOM for Vue login → dashboard swap
+            const observer = new MutationObserver(() => {
+                if (document.body.classList.contains('logged-in')) {
+                    observer.disconnect();
+                    window.location.href = targetUrl;
+                }
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+        })();
+        "
+    );
 });
