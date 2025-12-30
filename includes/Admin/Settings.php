@@ -20,6 +20,10 @@ class Settings {
         register_setting( 'ameliatutor_settings', 'ameliatutor_require_enrollment' );
         register_setting( 'ameliatutor_settings', 'ameliatutor_enforce_session_count' );
         register_setting( 'ameliatutor_settings', 'ameliatutor_show_dashboard_widgets' );
+        
+        // NEW: Panel URLs for dashboard integration
+        register_setting( 'ameliatutor_settings', 'ameliatutor_customer_panel_url' );
+        register_setting( 'ameliatutor_settings', 'ameliatutor_employee_panel_url' );
     }
 
     public static function render() {
@@ -27,7 +31,6 @@ class Settings {
         // Get mappings and ensure it's always an array
         $mappings = get_option( 'ameliatutor_service_mappings', [] );
         
-        // Fix: Ensure $mappings is always an array
         if ( ! is_array( $mappings ) ) {
             $mappings = [];
         }
@@ -77,11 +80,11 @@ class Settings {
                                        name="ameliatutor_enforce_session_count" 
                                        value="yes"
                                     <?php checked( get_option( 'ameliatutor_enforce_session_count', 'yes' ), 'yes' ); ?> />
-                                <?php esc_html_e( 'Require number of booked sessions to match number of course lessons', 'amelia-tutor-integration' ); ?>
+                                <?php esc_html_e( 'Validate recurring session count matches course lesson count', 'amelia-tutor-integration' ); ?>
                             </label>
                             <p class="description">
                                 <strong><?php esc_html_e( 'For recurring bookings:', 'amelia-tutor-integration' ); ?></strong>
-                                <?php esc_html_e( ' If a course has 4 lessons, students must book exactly 4 sessions. Booking 3 or 5 sessions will be blocked. This ensures proper sequential lesson completion.', 'amelia-tutor-integration' ); ?>
+                                <?php esc_html_e( ' Booking form will show required session count. If mismatch occurs, admin will be notified.', 'amelia-tutor-integration' ); ?>
                             </p>
                         </td>
                     </tr>
@@ -123,6 +126,42 @@ class Settings {
                     </tr>
                 </table>
 
+                <h2><?php esc_html_e( 'Dashboard Integration', 'amelia-tutor-integration' ); ?></h2>
+                
+                <table class="form-table">
+                    <tr>
+                        <th scope="row">
+                            <?php esc_html_e( 'Customer Panel URL', 'amelia-tutor-integration' ); ?>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   name="ameliatutor_customer_panel_url" 
+                                   value="<?php echo esc_attr( get_option( 'ameliatutor_customer_panel_url', '' ) ); ?>"
+                                   class="regular-text"
+                                   placeholder="<?php esc_attr_e( 'https://yoursite.com/my-appointments', 'amelia-tutor-integration' ); ?>" />
+                            <p class="description">
+                                <?php esc_html_e( 'URL of your Amelia Customer Panel page (with [ameliacustomerpanel] shortcode). Leave empty for auto-detection.', 'amelia-tutor-integration' ); ?>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <th scope="row">
+                            <?php esc_html_e( 'Employee Panel URL', 'amelia-tutor-integration' ); ?>
+                        </th>
+                        <td>
+                            <input type="url" 
+                                   name="ameliatutor_employee_panel_url" 
+                                   value="<?php echo esc_attr( get_option( 'ameliatutor_employee_panel_url', '' ) ); ?>"
+                                   class="regular-text"
+                                   placeholder="<?php esc_attr_e( 'https://yoursite.com/teaching-schedule', 'amelia-tutor-integration' ); ?>" />
+                            <p class="description">
+                                <?php esc_html_e( 'URL of your Amelia Employee Panel page (with [ameliaemployeepanel] shortcode). Leave empty for auto-detection.', 'amelia-tutor-integration' ); ?>
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+
                 <?php submit_button(); ?>
             </form>
 
@@ -133,35 +172,28 @@ class Settings {
                 <h2><?php esc_html_e( 'Service → Course Mapping', 'amelia-tutor-integration' ); ?></h2>
                 
                 <div class="ameliatutor-info-box">
-    <p><strong><?php esc_html_e( 'How it works:', 'amelia-tutor-integration' ); ?></strong></p>
-    <ul>
-        <li><?php esc_html_e( 'Connect each Amelia service to a TutorLMS course', 'amelia-tutor-integration' ); ?></li>
-        <li><?php esc_html_e( 'Students must enroll in the course before booking (if enabled above)', 'amelia-tutor-integration' ); ?></li>
-        <li><strong><?php esc_html_e( 'Recurring Sessions → Sequential Lessons (Automatic!)', 'amelia-tutor-integration' ); ?></strong><br>
-            <span style="color: #2271b1; font-size: 13px;">
-                <?php esc_html_e( 'Session 1 completes Lesson 1, Session 2 completes Lesson 2, Session 3 completes Lesson 3, etc.', 'amelia-tutor-integration' ); ?>
-            </span>
-        </li>
-        <li><strong><?php esc_html_e( 'Session Count Enforcement:', 'amelia-tutor-integration' ); ?></strong><br>
-            <span style="color: #d63638; font-size: 13px;">
-                <?php esc_html_e( 'If course has 4 lessons, students MUST book exactly 4 sessions (if enforcement enabled above).', 'amelia-tutor-integration' ); ?>
-            </span>
-        </li>
-        <li><strong><?php esc_html_e( 'Embed Booking Forms:', 'amelia-tutor-integration' ); ?></strong><br>
-            <span style="color: #00a32a; font-size: 13px;">
-                <?php esc_html_e( 'Add [ameliatutor_booking service=X] to any course description to embed booking forms with automatic enrollment verification.', 'amelia-tutor-integration' ); ?>
-            </span>
-        </li>
-    </ul>
-</div>
+                    <p><strong><?php esc_html_e( 'How it works:', 'amelia-tutor-integration' ); ?></strong></p>
+                    <ul>
+                        <li><?php esc_html_e( 'Connect each Amelia service to a TutorLMS course', 'amelia-tutor-integration' ); ?></li>
+                        <li><?php esc_html_e( 'Students must enroll in the course before booking (if enabled above)', 'amelia-tutor-integration' ); ?></li>
+                        <li><?php esc_html_e( 'Weekly booking limit: One active appointment per service per week', 'amelia-tutor-integration' ); ?></li>
+                        <li><strong><?php esc_html_e( 'Recurring Sessions → Sequential Lessons (Automatic!)', 'amelia-tutor-integration' ); ?></strong><br>
+                            <span style="color: #2271b1; font-size: 13px;">
+                                <?php esc_html_e( 'Session 1 completes Lesson 1, Session 2 completes Lesson 2, etc.', 'amelia-tutor-integration' ); ?>
+                            </span>
+                        </li>
+                        <li><strong><?php esc_html_e( 'Session Count Validation:', 'amelia-tutor-integration' ); ?></strong><br>
+                            <span style="color: #d63638; font-size: 13px;">
+                                <?php esc_html_e( 'Booking form will display required session count. If mismatch occurs, admin receives notification.', 'amelia-tutor-integration' ); ?>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
 
                 <div class="ameliatutor-info-box" style="background: #fff4e5; border-left-color: #f0b849;">
                     <p><strong>💡 <?php esc_html_e( 'Pro Tip: Perfect Alignment', 'amelia-tutor-integration' ); ?></strong></p>
                     <p style="margin: 10px 0 0 0;">
-                        <?php esc_html_e( 'Create your TutorLMS course with lessons FIRST, then customers will automatically be prompted to book the exact number of sessions needed.', 'amelia-tutor-integration' ); ?>
-                    </p>
-                    <p style="margin: 10px 0 0 0; font-size: 12px; color: #646970;">
-                        <?php esc_html_e( 'Example: Course with 6 lessons → Customer must book 6 recurring sessions → Perfect 1:1 mapping!', 'amelia-tutor-integration' ); ?>
+                        <?php esc_html_e( 'Create your TutorLMS course with lessons FIRST, then customers will see the exact number of sessions needed.', 'amelia-tutor-integration' ); ?>
                     </p>
                 </div>
 

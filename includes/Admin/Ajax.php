@@ -2,6 +2,8 @@
 
 namespace AmeliaTutor\Admin;
 
+use AmeliaTutor\Helpers\LessonCounter;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -94,52 +96,11 @@ class Ajax {
             wp_send_json_error( 'Invalid course ID' );
         }
 
-        $lesson_count = self::count_course_lessons( $course_id );
+        $lesson_count = LessonCounter::count_course_lessons( $course_id );
 
         wp_send_json_success( [
             'count' => $lesson_count,
         ] );
-    }
-
-    /**
-     * Count total lessons in a course
-     */
-    protected static function count_course_lessons( $course_id ) {
-        
-        $lesson_count = 0;
-
-        // Get topics for the course
-        $topics = tutor_utils()->get_topics( $course_id );
-
-        if ( $topics && ! empty( $topics->posts ) ) {
-            foreach ( $topics->posts as $topic ) {
-                // Get lessons for each topic
-                $topic_contents = tutor_utils()->get_course_contents_by_topic( $topic->ID );
-                
-                if ( $topic_contents && ! empty( $topic_contents->posts ) ) {
-                    foreach ( $topic_contents->posts as $content ) {
-                        if ( $content->post_type === 'lesson' ) {
-                            $lesson_count++;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: Get lessons directly associated with course
-        if ( $lesson_count === 0 ) {
-            $direct_lessons = get_posts( [
-                'post_type'      => 'lesson',
-                'posts_per_page' => -1,
-                'meta_key'       => '_tutor_course_id_for_lesson',
-                'meta_value'     => $course_id,
-                'fields'         => 'ids',
-            ] );
-
-            $lesson_count = count( $direct_lessons );
-        }
-
-        return $lesson_count;
     }
 
     /**

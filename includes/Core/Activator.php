@@ -14,11 +14,12 @@ class Activator {
 
     private static function create_tables() {
         global $wpdb;
-
-        $table = $wpdb->prefix . 'ameliatutor_bookings';
         $charset = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE {$table} (
+        // Existing bookings tracking table
+        $table_bookings = $wpdb->prefix . 'ameliatutor_bookings';
+        
+        $sql_bookings = "CREATE TABLE {$table_bookings} (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             appointment_id BIGINT UNSIGNED NOT NULL,
             booking_id BIGINT UNSIGNED NOT NULL,
@@ -38,10 +39,44 @@ class Activator {
             KEY user_id (user_id),
             KEY course_id (course_id),
             KEY appointment_id (appointment_id),
-            KEY booking_status (booking_status)
+            KEY booking_status (booking_status),
+            KEY service_user_week (service_id, user_id, created_at)
+        ) {$charset};";
+
+        // New table for booking notices (mismatch tracking)
+        $table_notices = $wpdb->prefix . 'ameliatutor_booking_notices';
+        
+        $sql_notices = "CREATE TABLE {$table_notices} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            appointment_id BIGINT UNSIGNED NOT NULL,
+            notice_type VARCHAR(50) NOT NULL,
+            notice_data TEXT,
+            resolved TINYINT(1) DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY appointment_id (appointment_id),
+            KEY notice_type (notice_type),
+            KEY resolved (resolved)
+        ) {$charset};";
+
+        // New table for customer notes
+        $table_notes = $wpdb->prefix . 'ameliatutor_customer_notes';
+        
+        $sql_notes = "CREATE TABLE {$table_notes} (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            booking_id BIGINT UNSIGNED NOT NULL,
+            note TEXT NOT NULL,
+            note_type VARCHAR(50) DEFAULT 'general',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            KEY booking_id (booking_id),
+            KEY note_type (note_type)
         ) {$charset};";
 
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-        dbDelta( $sql );
+        
+        dbDelta( $sql_bookings );
+        dbDelta( $sql_notices );
+        dbDelta( $sql_notes );
     }
 }

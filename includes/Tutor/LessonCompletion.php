@@ -2,6 +2,8 @@
 
 namespace AmeliaTutor\Tutor;
 
+use AmeliaTutor\Helpers\LessonCounter;
+
 if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
@@ -31,15 +33,17 @@ class LessonCompletion {
         $lesson_id = self::get_lesson_for_session( $booking );
 
         if ( ! $lesson_id ) {
-            return; // No lesson to complete
-        }
-
-        // Check if already completed to avoid duplicate completions
-        if ( tutor_utils()->is_completed_lesson( intval( $lesson_id ), intval( $booking['user_id'] ) ) ) {
             return;
         }
 
-        // Mark lesson as complete
+        // Avoid duplicate completion
+        if ( tutor_utils()->is_completed_lesson(
+            intval( $lesson_id ),
+            intval( $booking['user_id'] )
+        ) ) {
+            return;
+        }
+
         tutor_utils()->mark_lesson_complete(
             intval( $lesson_id ),
             intval( $booking['user_id'] )
@@ -51,92 +55,48 @@ class LessonCompletion {
      */
     protected static function get_lesson_for_session( array $booking ) {
 
-        // If recurring appointment, use sequential lesson mapping
-        if ( intval( $booking['is_recurring'] ) === 1 ) {
-            
-            $session_number = intval( $booking['session_number'] );
-            $course_id = intval( $booking['course_id'] );
+        $course_id = intval( $booking['course_id'] );
 
-            // Get all lessons for the course in order
-            $lessons = self::get_course_lessons_ordered( $course_id );
+        // Recurring appointment → sequential lesson mapping
+        if ( ! empty( $booking['is_recurring'] ) && intval( $booking['is_recurring'] ) === 1 ) {
+
+            $session_number = max( 1, intval( $booking['session_number'] ) );
+
+            // 🔥 Use centralized lesson counter logic
+            $lessons = LessonCounter::get_course_lessons_ordered( $course_id );
 
             if ( empty( $lessons ) ) {
                 return 0;
             }
 
-            // Session 1 → lessons[0], Session 2 → lessons[1], etc.
+            // Session 1 → lesson[0], Session 2 → lesson[1]
             $lesson_index = $session_number - 1;
 
             if ( isset( $lessons[ $lesson_index ] ) ) {
                 return intval( $lessons[ $lesson_index ]->ID );
             }
 
-            // If session number exceeds available lessons, complete the last lesson
+            // Safety fallback → last lesson
             return intval( end( $lessons )->ID );
-
-        } else {
-            // Single appointment - use the mapped lesson_id
-            return intval( $booking['lesson_id'] );
-        }
-    }
-
-    /**
-     * Get all lessons for a course ordered by menu_order
-     */
-    protected static function get_course_lessons_ordered( $course_id ) {
-
-        static $cache = [];
-
-        if ( isset( $cache[ $course_id ] ) ) {
-            return $cache[ $course_id ];
         }
 
-        $lessons = [];
-
-        // Get topics for the course
-        $topics = tutor_utils()->get_topics( $course_id );
-
-        if ( $topics && ! empty( $topics->posts ) ) {
-            foreach ( $topics->posts as $topic ) {
-                // Get lessons for each topic
-                $topic_contents = tutor_utils()->get_course_contents_by_topic( $topic->ID );
-                
-                if ( $topic_contents && ! empty( $topic_contents->posts ) ) {
-                    foreach ( $topic_contents->posts as $content ) {
-                        if ( $content->post_type === 'lesson' ) {
-                            $lessons[] = $content;
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: Get lessons directly associated with course
-        if ( empty( $lessons ) ) {
-            $lessons = get_posts( [
-                'post_type'      => 'lesson',
-                'posts_per_page' => -1,
-                'meta_key'       => '_tutor_course_id_for_lesson',
-                'meta_value'     => $course_id,
-                'orderby'        => 'menu_order',
-                'order'          => 'ASC',
-            ] );
-        }
-
-        $cache[ $course_id ] = $lessons;
-
-        return $lessons;
+        // Single appointment → mapped lesson
+        return ! empty( $booking['lesson_id'] )
+            ? intval( $booking['lesson_id'] )
+            : 0;
     }
 
     /**
      * Count approved/completed sessions for recurring appointments
+     * (kept for future use / reporting)
      */
     protected static function count_completed_sessions( $appointment_id ) {
         global $wpdb;
 
         return (int) $wpdb->get_var(
             $wpdb->prepare(
-                "SELECT COUNT(*) FROM {$wpdb->prefix}ameliatutor_bookings
+                "SELECT COUNT(*) 
+                 FROM {$wpdb->prefix}ameliatutor_bookings
                  WHERE appointment_id = %d
                  AND booking_status IN ('approved','completed')",
                 $appointment_id

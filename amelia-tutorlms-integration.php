@@ -3,7 +3,7 @@
  * Plugin Name: Amelia-TutorLMS Complete Integration
  * Plugin URI: https://ekesmall.com
  * Description: Complete integration between Amelia and TutorLMS - enrollment verification, lesson completion, dashboard widgets
- * Version: 1.0.2
+ * Version: 1.0.5
  * Author: Ekemode Quazim (Ekesmall)
  * Author URI: https://ekesmall.com
  * Requires at least: 5.8
